@@ -10,6 +10,8 @@ class StrengthPreset {
 }
 
 class CoffeeCalculator {
+  static const double maxRatio = 25;
+
   static const Map<BrewMethod, String> methodLabels = {
     BrewMethod.aeropress: 'AeroPress',
     BrewMethod.chemex: 'Chemex',
@@ -20,36 +22,36 @@ class CoffeeCalculator {
   };
 
   static const Map<BrewMethod, int> waterPerCupMl = {
-    BrewMethod.aeropress: 250,
-    BrewMethod.chemex: 250,
-    BrewMethod.v60: 240,
-    BrewMethod.frenchpress: 250,
+    BrewMethod.aeropress: 280,
+    BrewMethod.chemex: 150,
+    BrewMethod.v60: 170,
+    BrewMethod.frenchpress: 180,
     BrewMethod.coldbrew: 160,
-    BrewMethod.mokaItaliana: 70,
+    BrewMethod.mokaItaliana: 60,
   };
 
   static const Map<BrewMethod, double> defaultBaseRatio = {
-    BrewMethod.aeropress: 15.6,
-    BrewMethod.chemex: 16.7,
-    BrewMethod.v60: 16.8,
-    BrewMethod.frenchpress: 16,
-    BrewMethod.coldbrew: 8,
-    BrewMethod.mokaItaliana: 9,
+    BrewMethod.aeropress: 16,
+    BrewMethod.chemex: 16,
+    BrewMethod.v60: 16,
+    BrewMethod.frenchpress: 14,
+    BrewMethod.coldbrew: 6,
+    BrewMethod.mokaItaliana: 10,
   };
 
   static const Map<BrewMethod, List<int>> suggestedRatioRange = {
-    BrewMethod.aeropress: [14, 16],
+    BrewMethod.aeropress: [15, 17],
     BrewMethod.chemex: [15, 17],
-    BrewMethod.v60: [15, 18],
-    BrewMethod.frenchpress: [15, 18],
-    BrewMethod.coldbrew: [6, 10],
-    BrewMethod.mokaItaliana: [8, 10],
+    BrewMethod.v60: [16, 18],
+    BrewMethod.frenchpress: [12, 15],
+    BrewMethod.coldbrew: [4, 8],
+    BrewMethod.mokaItaliana: [8, 12],
   };
 
   static const Map<BrewMethod, String> grindRecommendations = {
     BrewMethod.aeropress: 'Media-fina',
     BrewMethod.chemex: 'Media-gruesa',
-    BrewMethod.v60: 'Media',
+    BrewMethod.v60: 'Media-fina',
     BrewMethod.frenchpress: 'Gruesa',
     BrewMethod.coldbrew: 'Gruesa',
     BrewMethod.mokaItaliana: 'Fina a media-fina',
@@ -58,7 +60,7 @@ class CoffeeCalculator {
   static const Map<BrewMethod, List<String>> methodGuides = {
     BrewMethod.aeropress: [
       'Enjuaga el filtro y precalienta el equipo.',
-      'Para 1 taza usa 16 g de cafe y 250 ml de agua (aprox 1:15.6).',
+      'Usa molienda media-fina y trabaja cerca de 1:16.',
       'Vierte el agua en 2 etapas y remueve.',
       'Presiona suave despues de 1:30.',
     ],
@@ -70,25 +72,25 @@ class CoffeeCalculator {
     ],
     BrewMethod.v60: [
       'Enjuaga el filtro y precalienta el servidor.',
-      'Trabaja entre 1:16 y 1:17 con molienda media.',
+      'Trabaja entre 1:16 y 1:18 con molienda media-fina.',
       'Haz bloom 30-40 s y luego vierte por etapas.',
       'Tiempo objetivo 2:30 a 3:30.',
     ],
     BrewMethod.frenchpress: [
-      'Usa cafe molido grueso en rango 1:15 a 1:18.',
+      'Usa cafe molido grueso en rango 1:12 a 1:15.',
       'Vierte agua y remueve.',
       'Infusiona 4 minutos.',
       'Presiona lentamente y sirve.',
     ],
     BrewMethod.coldbrew: [
-      'Muele grueso y trabaja como concentrado (1:6 a 1:10).',
+      'Muele grueso y trabaja como concentrado (1:4 a 1:8).',
       'Incorpora agua fria.',
       'Refrigera 12 a 16 horas.',
       'Filtra. Si queda intenso, diluye 1:1 con agua o leche.',
     ],
     BrewMethod.mokaItaliana: [
       'Llena la base con agua caliente sin pasar la valvula.',
-      'Usa cafe molido fino a medio-fino sin compactar (aprox 1:8 a 1:10).',
+      'Usa cafe molido fino a medio-fino sin compactar (aprox 1:8 a 1:12).',
       'Arma la moka y calienta a fuego medio-bajo.',
       'Retira cuando el flujo aclare para evitar amargor.',
     ],
@@ -131,8 +133,21 @@ class CoffeeCalculator {
     return (value * factor).round() / factor;
   }
 
-  static double adjustedRatio(double baseRatio, double strength) {
-    return clamp(baseRatio / strength, 6, 25);
+  static double minRatioForMethod(BrewMethod method) {
+    if (method == BrewMethod.coldbrew) return 4;
+    return 6;
+  }
+
+  static double clampRatioForMethod(BrewMethod method, double ratio) {
+    return clamp(ratio, minRatioForMethod(method), maxRatio);
+  }
+
+  static double adjustedRatio(
+    BrewMethod method,
+    double baseRatio,
+    double strength,
+  ) {
+    return clampRatioForMethod(method, baseRatio / strength);
   }
 
   static double waterMl(BrewMethod method, int cups) {

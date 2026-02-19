@@ -3,25 +3,30 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('adjusted ratio decreases when strength increases', () {
-    final ratio = CoffeeCalculator.adjustedRatio(16, 2);
+    final ratio = CoffeeCalculator.adjustedRatio(BrewMethod.v60, 16, 2);
     expect(ratio, 8);
+  });
+
+  test('cold brew adjusted ratio honors minimum 1:4', () {
+    final ratio = CoffeeCalculator.adjustedRatio(BrewMethod.coldbrew, 6, 2);
+    expect(ratio, 4);
   });
 
   test('water and coffee calculation for chemex', () {
     final water = CoffeeCalculator.waterMl(BrewMethod.chemex, 2);
     final coffee = CoffeeCalculator.coffeeGrams(water, 16);
 
-    expect(water, 500);
-    expect(CoffeeCalculator.roundTo(coffee, 0), 31);
+    expect(water, 300);
+    expect(CoffeeCalculator.roundTo(coffee, 0), 19);
   });
 
-  test('aeropress default recipe aligns with 16 g for 250 ml', () {
-    final water = CoffeeCalculator.waterMl(BrewMethod.aeropress, 1);
-    final ratio = CoffeeCalculator.defaultBaseRatio[BrewMethod.aeropress]!;
+  test('v60 defaults use 1:16 as base recommendation', () {
+    final water = CoffeeCalculator.waterMl(BrewMethod.v60, 1);
+    final ratio = CoffeeCalculator.defaultBaseRatio[BrewMethod.v60]!;
     final coffee = CoffeeCalculator.coffeeGrams(water, ratio);
 
-    expect(water, 250);
-    expect(CoffeeCalculator.roundTo(coffee, 0), 16);
+    expect(water, 170);
+    expect(CoffeeCalculator.roundTo(coffee, 0), 11);
   });
 
   test('ml to oz conversion', () {
@@ -32,8 +37,8 @@ void main() {
   test('moka italiana defaults are available', () {
     expect(CoffeeCalculator.methodFromKey('mokaItaliana'),
         BrewMethod.mokaItaliana);
-    expect(CoffeeCalculator.waterMl(BrewMethod.mokaItaliana, 2), 140);
-    expect(CoffeeCalculator.defaultBaseRatio[BrewMethod.mokaItaliana], 9);
+    expect(CoffeeCalculator.waterMl(BrewMethod.mokaItaliana, 2), 120);
+    expect(CoffeeCalculator.defaultBaseRatio[BrewMethod.mokaItaliana], 10);
   });
 
   test('every brew method has grind recommendation', () {

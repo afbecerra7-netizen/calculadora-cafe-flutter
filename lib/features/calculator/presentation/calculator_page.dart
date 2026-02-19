@@ -21,20 +21,74 @@ class _CalculatorPageState extends State<CalculatorPage> {
   final controller = CalculatorController();
   final _resultsKey = GlobalKey();
   final _scrollController = ScrollController();
+  late final Map<BrewMethod, TextEditingController> _ratioControllers;
+  late final Map<BrewMethod, FocusNode> _ratioFocusNodes;
   bool _advancedOpen = false;
   static const _methodIconColor = Color(0xFF7D4D1F);
 
   @override
   void initState() {
     super.initState();
+    _ratioControllers = {
+      for (final method in BrewMethod.values)
+        method: TextEditingController(
+          text: controller.baseRatio[method]!.toStringAsFixed(1),
+        ),
+    };
+    _ratioFocusNodes = {
+      for (final method in BrewMethod.values) method: FocusNode(),
+    };
+    controller.addListener(_syncRatioInputs);
     controller.init();
   }
 
   @override
   void dispose() {
+    controller.removeListener(_syncRatioInputs);
+    for (final textController in _ratioControllers.values) {
+      textController.dispose();
+    }
+    for (final focusNode in _ratioFocusNodes.values) {
+      focusNode.dispose();
+    }
     _scrollController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  double? _parseRatioInput(String text) {
+    final normalized = text.trim().replaceAll(',', '.');
+    if (normalized.isEmpty) return null;
+    return double.tryParse(normalized);
+  }
+
+  void _syncRatioInputs() {
+    for (final method in BrewMethod.values) {
+      final focusNode = _ratioFocusNodes[method]!;
+      if (focusNode.hasFocus) continue;
+      final expected = controller.baseRatio[method]!.toStringAsFixed(1);
+      final textController = _ratioControllers[method]!;
+      if (textController.text == expected) continue;
+      textController.value = TextEditingValue(
+        text: expected,
+        selection: TextSelection.collapsed(offset: expected.length),
+      );
+    }
+  }
+
+  void _commitRatio(BrewMethod method) {
+    final textController = _ratioControllers[method]!;
+    final parsed = _parseRatioInput(textController.text);
+    if (parsed != null) {
+      controller.setBaseRatio(method, parsed);
+    }
+    final normalized = controller.baseRatio[method]!.toStringAsFixed(1);
+    if (textController.text != normalized) {
+      textController.value = TextEditingValue(
+        text: normalized,
+        selection: TextSelection.collapsed(offset: normalized.length),
+      );
+    }
   }
 
   @override
@@ -341,6 +395,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<WaterUnit>(
+                                    key: ValueKey(controller.unit),
                                     initialValue: controller.unit,
                                     decoration:
                                         _inputDecoration('Unidad de agua'),
@@ -419,19 +474,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                       SizedBox(
                                         width: 86,
                                         child: TextFormField(
-                                          initialValue: controller.baseRatio[m]!
-                                              .toStringAsFixed(1),
+                                          controller: _ratioControllers[m],
+                                          focusNode: _ratioFocusNodes[m],
                                           keyboardType: const TextInputType
                                               .numberWithOptions(decimal: true),
+                                          textInputAction: TextInputAction.done,
                                           decoration: _inputDecoration('Ratio'),
-                                          onFieldSubmitted: (text) {
-                                            final parsed =
-                                                double.tryParse(text);
-                                            if (parsed != null) {
-                                              controller.setBaseRatio(
-                                                  m, parsed);
-                                            }
-                                          },
+                                          onEditingComplete: () =>
+                                              _commitRatio(m),
+                                          onFieldSubmitted: (_) =>
+                                              _commitRatio(m),
+                                          onTapOutside: (_) => _commitRatio(m),
                                         ),
                                       ),
                                     ],
