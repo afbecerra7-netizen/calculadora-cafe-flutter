@@ -304,7 +304,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<WaterUnit>(
-                                    value: controller.unit,
+                                    initialValue: controller.unit,
                                     decoration:
                                         _inputDecoration('Unidad de agua'),
                                     items: const [

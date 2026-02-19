@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import '../domain/coffee_calculator.dart';
 
 class CalculatorController extends ChangeNotifier {
   static const _prefsKey = 'coffee_calc_prefs_v1';
+  static const _persistDebounceDelay = Duration(milliseconds: 250);
 
   BrewMethod method = BrewMethod.aeropress;
   int cups = 1;
@@ -15,6 +17,11 @@ class CalculatorController extends ChangeNotifier {
   late Map<BrewMethod, double> baseRatio;
 
   bool isLoading = true;
+  Timer? _persistDebounce;
+  bool _persistInProgress = false;
+  bool _isDisposed = false;
+  int _stateVersion = 0;
+  int _persistedVersion = 0;
 
   CalculatorController() {
     baseRatio = {...CoffeeCalculator.defaultBaseRatio};
@@ -28,7 +35,8 @@ class CalculatorController extends ChangeNotifier {
       try {
         final map = jsonDecode(raw) as Map<String, dynamic>;
         method = CoffeeCalculator.methodFromKey(
-            map['method'] as String? ?? 'aeropress');
+          map['method'] as String? ?? 'aeropress',
+        );
         cups = (map['cups'] as num?)?.toInt() ?? 1;
         strength = (map['strength'] as num?)?.toDouble() ?? 1.0;
         unit = (map['unit'] == 'oz') ? WaterUnit.oz : WaterUnit.ml;
@@ -53,9 +61,8 @@ class CalculatorController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    final payload = {
+  Map<String, dynamic> _buildPayload() {
+    return {
       'method': method.name,
       'cups': cups,
       'strength': strength,
@@ -64,50 +71,92 @@ class CalculatorController extends ChangeNotifier {
         for (final entry in baseRatio.entries) entry.key.name: entry.value,
       },
     };
-
-    await prefs.setString(_prefsKey, jsonEncode(payload));
   }
 
-  Future<void> setMethod(BrewMethod value) async {
+  void _schedulePersist(Duration delay) {
+    if (_isDisposed) return;
+    _persistDebounce?.cancel();
+    _persistDebounce = Timer(delay, () {
+      unawaited(_flushPersist());
+    });
+  }
+
+  void _markDirty({bool persistImmediately = false}) {
+    _stateVersion++;
+    if (persistImmediately) {
+      _persistDebounce?.cancel();
+      unawaited(_flushPersist());
+      return;
+    }
+    _schedulePersist(_persistDebounceDelay);
+  }
+
+  Future<void> _flushPersist() async {
+    if (_isDisposed || _persistInProgress) return;
+    _persistInProgress = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      while (!_isDisposed && _persistedVersion < _stateVersion) {
+        final targetVersion = _stateVersion;
+        await prefs.setString(_prefsKey, jsonEncode(_buildPayload()));
+        _persistedVersion = targetVersion;
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to persist calculator state: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _persistInProgress = false;
+      if (!_isDisposed && _persistedVersion < _stateVersion) {
+        _schedulePersist(const Duration(milliseconds: 100));
+      }
+    }
+  }
+
+  void setMethod(BrewMethod value) {
     method = value;
     notifyListeners();
-    await _persist();
+    _markDirty();
   }
 
-  Future<void> setCups(int value) async {
+  void setCups(int value) {
     cups = value.clamp(1, 12);
     notifyListeners();
-    await _persist();
+    _markDirty();
   }
 
-  Future<void> setStrength(double value) async {
+  void setStrength(double value) {
     strength = CoffeeCalculator.clamp(value, 0.75, 2);
     notifyListeners();
-    await _persist();
+    _markDirty();
   }
 
-  Future<void> setUnit(WaterUnit value) async {
+  void setUnit(WaterUnit value) {
     unit = value;
     notifyListeners();
-    await _persist();
+    _markDirty();
   }
 
-  Future<void> setBaseRatio(BrewMethod m, double ratio) async {
+  void setBaseRatio(BrewMethod m, double ratio) {
     baseRatio[m] = CoffeeCalculator.clamp(ratio, 6, 25);
     notifyListeners();
-    await _persist();
+    _markDirty();
   }
 
-  Future<void> reset() async {
+  void reset() {
     method = BrewMethod.aeropress;
     cups = 1;
     strength = 1.0;
     unit = WaterUnit.ml;
     baseRatio = {...CoffeeCalculator.defaultBaseRatio};
     notifyListeners();
+    _markDirty(persistImmediately: true);
+  }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefsKey);
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _persistDebounce?.cancel();
+    super.dispose();
   }
 
   double get adjustedRatio =>
