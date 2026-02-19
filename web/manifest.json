@@ -1,6 +1,6 @@
 {
-    "name": "cafe_flutter_app",
-    "short_name": "cafe_flutter_app",
+    "name": "Calculadora Cafe",
+    "short_name": "Calculadora Cafe",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

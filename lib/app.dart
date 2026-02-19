@@ -11,7 +11,7 @@ class CafeApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Calculadora de Cafe',
+      title: 'Calculadora Cafe',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
