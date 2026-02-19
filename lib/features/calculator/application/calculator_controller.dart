@@ -56,7 +56,7 @@ class CalculatorController extends ChangeNotifier {
     }
 
     cups = cups.clamp(1, 12);
-    strength = CoffeeCalculator.clamp(strength, 0.75, 2);
+    strength = CoffeeCalculator.nearestStrengthPresetValue(strength);
     isLoading = false;
     notifyListeners();
   }
@@ -125,9 +125,15 @@ class CalculatorController extends ChangeNotifier {
   }
 
   void setStrength(double value) {
-    strength = CoffeeCalculator.clamp(value, 0.75, 2);
+    strength = CoffeeCalculator.nearestStrengthPresetValue(value);
     notifyListeners();
     _markDirty();
+  }
+
+  void setStrengthPresetIndex(int index) {
+    final safeIndex =
+        index.clamp(0, CoffeeCalculator.strengthPresets.length - 1);
+    setStrength(CoffeeCalculator.strengthPresets[safeIndex].factor);
   }
 
   void setUnit(WaterUnit value) {
@@ -171,6 +177,10 @@ class CalculatorController extends ChangeNotifier {
 
   String get ratioLabel => '1:${CoffeeCalculator.roundTo(adjustedRatio, 1)}';
   String get methodLabel => CoffeeCalculator.methodLabels[method]!;
+  int get strengthPresetIndex =>
+      CoffeeCalculator.nearestStrengthPresetIndex(strength);
+  String get strengthLabel =>
+      CoffeeCalculator.strengthPresets[strengthPresetIndex].label;
   String get grindRecommendation =>
       CoffeeCalculator.grindRecommendations[method]!;
   String get rangeLabel {

@@ -261,12 +261,81 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            Slider(
-                              value: controller.strength,
-                              min: 0.75,
-                              max: 2,
-                              divisions: 25,
-                              onChanged: controller.setStrength,
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 7),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(999),
+                                color: const Color(0xCCFFF9F0),
+                                border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.7)),
+                              ),
+                              child: Text(
+                                controller.strengthLabel,
+                                style: const TextStyle(
+                                  color: Color(0xFF7C4D1B),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: const Color(0xFFCD7B2C),
+                                inactiveTrackColor: const Color(0x44B57941),
+                                thumbColor: const Color(0xFF9B5B22),
+                                overlayColor: const Color(0x229B5B22),
+                                trackHeight: 5.5,
+                              ),
+                              child: Slider(
+                                value:
+                                    controller.strengthPresetIndex.toDouble(),
+                                min: 0,
+                                max: (CoffeeCalculator.strengthPresets.length -
+                                        1)
+                                    .toDouble(),
+                                divisions:
+                                    CoffeeCalculator.strengthPresets.length - 1,
+                                label: controller.strengthLabel,
+                                onChanged: (v) => controller
+                                    .setStrengthPresetIndex(v.round()),
+                              ),
+                            ),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: CoffeeCalculator.strengthPresets
+                                  .asMap()
+                                  .entries
+                                  .map(
+                                (entry) {
+                                  final selected =
+                                      controller.strengthPresetIndex ==
+                                          entry.key;
+                                  return ChoiceChip(
+                                    label: Text(entry.value.label),
+                                    selected: selected,
+                                    onSelected: (_) => controller
+                                        .setStrengthPresetIndex(entry.key),
+                                    labelStyle: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: selected
+                                          ? const Color(0xFF7A3F08)
+                                          : const Color(0xFF6F5135),
+                                    ),
+                                    selectedColor: const Color(0xFFFFE3C0),
+                                    backgroundColor: const Color(0xCCFFFFFF),
+                                    side: BorderSide(
+                                      color: selected
+                                          ? const Color(0xFFF0A65B)
+                                          : Colors.white.withValues(alpha: 0.7),
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  );
+                                },
+                              ).toList(),
                             ),
                             Row(
                               children: [

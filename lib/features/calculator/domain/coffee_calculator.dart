@@ -2,6 +2,13 @@ enum BrewMethod { aeropress, chemex, v60, frenchpress, coldbrew, mokaItaliana }
 
 enum WaterUnit { ml, oz }
 
+class StrengthPreset {
+  const StrengthPreset({required this.label, required this.factor});
+
+  final String label;
+  final double factor;
+}
+
 class CoffeeCalculator {
   static const Map<BrewMethod, String> methodLabels = {
     BrewMethod.aeropress: 'AeroPress',
@@ -13,30 +20,30 @@ class CoffeeCalculator {
   };
 
   static const Map<BrewMethod, int> waterPerCupMl = {
-    BrewMethod.aeropress: 100,
-    BrewMethod.chemex: 165,
-    BrewMethod.v60: 175,
+    BrewMethod.aeropress: 250,
+    BrewMethod.chemex: 250,
+    BrewMethod.v60: 240,
     BrewMethod.frenchpress: 250,
     BrewMethod.coldbrew: 160,
     BrewMethod.mokaItaliana: 70,
   };
 
   static const Map<BrewMethod, double> defaultBaseRatio = {
-    BrewMethod.aeropress: 15,
-    BrewMethod.chemex: 16,
-    BrewMethod.v60: 16,
-    BrewMethod.frenchpress: 14,
+    BrewMethod.aeropress: 15.6,
+    BrewMethod.chemex: 16.7,
+    BrewMethod.v60: 16.8,
+    BrewMethod.frenchpress: 16,
     BrewMethod.coldbrew: 8,
     BrewMethod.mokaItaliana: 9,
   };
 
   static const Map<BrewMethod, List<int>> suggestedRatioRange = {
-    BrewMethod.aeropress: [13, 17],
+    BrewMethod.aeropress: [14, 16],
     BrewMethod.chemex: [15, 17],
-    BrewMethod.v60: [15, 17],
-    BrewMethod.frenchpress: [12, 15],
+    BrewMethod.v60: [15, 18],
+    BrewMethod.frenchpress: [15, 18],
     BrewMethod.coldbrew: [6, 10],
-    BrewMethod.mokaItaliana: [7, 10],
+    BrewMethod.mokaItaliana: [8, 10],
   };
 
   static const Map<BrewMethod, String> grindRecommendations = {
@@ -51,41 +58,67 @@ class CoffeeCalculator {
   static const Map<BrewMethod, List<String>> methodGuides = {
     BrewMethod.aeropress: [
       'Enjuaga el filtro y precalienta el equipo.',
-      'Agrega el cafe molido medio-fino.',
+      'Para 1 taza usa 16 g de cafe y 250 ml de agua (aprox 1:15.6).',
       'Vierte el agua en 2 etapas y remueve.',
       'Presiona suave despues de 1:30.',
     ],
     BrewMethod.chemex: [
       'Enjuaga el filtro y descarta el agua.',
-      'Agrega cafe molido medio.',
+      'Usa una base de 1:16 a 1:17 con molienda media-gruesa.',
       'Vierte en circulos hasta completar.',
       'Sirve cuando termine el goteo.',
     ],
     BrewMethod.v60: [
       'Enjuaga el filtro y precalienta el servidor.',
-      'Agrega cafe molido medio-fino.',
+      'Trabaja entre 1:16 y 1:17 con molienda media.',
       'Haz bloom 30-40 s y luego vierte por etapas.',
       'Tiempo objetivo 2:30 a 3:30.',
     ],
     BrewMethod.frenchpress: [
-      'Agrega cafe molido grueso.',
+      'Usa cafe molido grueso en rango 1:15 a 1:18.',
       'Vierte agua y remueve.',
       'Infusiona 4 minutos.',
       'Presiona lentamente y sirve.',
     ],
     BrewMethod.coldbrew: [
-      'Agrega cafe molido grueso.',
+      'Muele grueso y trabaja como concentrado (1:6 a 1:10).',
       'Incorpora agua fria.',
       'Refrigera 12 a 16 horas.',
-      'Filtra y sirve con hielo o diluye.',
+      'Filtra. Si queda intenso, diluye 1:1 con agua o leche.',
     ],
     BrewMethod.mokaItaliana: [
       'Llena la base con agua caliente sin pasar la valvula.',
-      'Usa cafe molido fino a medio-fino sin compactar.',
+      'Usa cafe molido fino a medio-fino sin compactar (aprox 1:8 a 1:10).',
       'Arma la moka y calienta a fuego medio-bajo.',
       'Retira cuando el flujo aclare para evitar amargor.',
     ],
   };
+
+  static const List<StrengthPreset> strengthPresets = [
+    StrengthPreset(label: 'Muy suave', factor: 0.75),
+    StrengthPreset(label: 'Suave', factor: 0.9),
+    StrengthPreset(label: 'Normal', factor: 1.0),
+    StrengthPreset(label: 'Un poco fuerte', factor: 1.2),
+    StrengthPreset(label: 'Fuerte', factor: 1.5),
+    StrengthPreset(label: 'Muy fuerte', factor: 2.0),
+  ];
+
+  static int nearestStrengthPresetIndex(double value) {
+    var bestIndex = 0;
+    var bestDistance = (strengthPresets.first.factor - value).abs();
+    for (var i = 1; i < strengthPresets.length; i++) {
+      final distance = (strengthPresets[i].factor - value).abs();
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
+
+  static double nearestStrengthPresetValue(double value) {
+    return strengthPresets[nearestStrengthPresetIndex(value)].factor;
+  }
 
   static double clamp(double value, double min, double max) {
     if (value < min) return min;
