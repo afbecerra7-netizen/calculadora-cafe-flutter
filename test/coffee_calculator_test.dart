@@ -19,4 +19,25 @@ void main() {
     final oz = CoffeeCalculator.mlToOz(300);
     expect(CoffeeCalculator.roundTo(oz, 1), 10.1);
   });
+
+  test('moka italiana defaults are available', () {
+    expect(CoffeeCalculator.methodFromKey('mokaItaliana'),
+        BrewMethod.mokaItaliana);
+    expect(CoffeeCalculator.waterMl(BrewMethod.mokaItaliana, 2), 140);
+    expect(CoffeeCalculator.defaultBaseRatio[BrewMethod.mokaItaliana], 9);
+  });
+
+  test('every brew method has grind recommendation', () {
+    expect(
+      CoffeeCalculator.grindRecommendations.keys.toSet(),
+      BrewMethod.values.toSet(),
+    );
+  });
+
+  test('every brew method has a quick guide', () {
+    expect(
+      CoffeeCalculator.methodGuides.keys.toSet(),
+      BrewMethod.values.toSet(),
+    );
+  });
 }

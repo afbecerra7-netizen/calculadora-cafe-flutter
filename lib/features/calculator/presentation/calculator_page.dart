@@ -1,10 +1,14 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../application/calculator_controller.dart';
 import '../domain/coffee_calculator.dart';
+import 'widgets/background_orbs.dart';
+import 'widgets/brew_method_icon.dart';
+import 'widgets/glass_card.dart';
+import 'widgets/metric_card.dart';
+import 'widgets/quick_summary.dart';
+import 'widgets/section_title.dart';
 
 class CalculatorPage extends StatefulWidget {
   const CalculatorPage({super.key});
@@ -18,47 +22,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   final _resultsKey = GlobalKey();
   final _scrollController = ScrollController();
   bool _advancedOpen = false;
-
-  static const Map<BrewMethod, IconData> _methodIcons = {
-    BrewMethod.aeropress: Icons.coffee_maker_outlined,
-    BrewMethod.chemex: Icons.science_outlined,
-    BrewMethod.v60: Icons.filter_alt_outlined,
-    BrewMethod.frenchpress: Icons.local_cafe_outlined,
-    BrewMethod.coldbrew: Icons.ac_unit_outlined,
-  };
-
-  static const Map<BrewMethod, List<String>> _guides = {
-    BrewMethod.aeropress: [
-      'Enjuaga el filtro y precalienta el equipo.',
-      'Agrega el cafe molido medio-fino.',
-      'Vierte el agua en 2 etapas y remueve.',
-      'Presiona suave despues de 1:30.',
-    ],
-    BrewMethod.chemex: [
-      'Enjuaga el filtro y descarta el agua.',
-      'Agrega cafe molido medio.',
-      'Vierte en circulos hasta completar.',
-      'Sirve cuando termine el goteo.',
-    ],
-    BrewMethod.v60: [
-      'Enjuaga el filtro y precalienta el servidor.',
-      'Agrega cafe molido medio-fino.',
-      'Haz bloom 30-40 s y luego vierte por etapas.',
-      'Tiempo objetivo 2:30 a 3:30.',
-    ],
-    BrewMethod.frenchpress: [
-      'Agrega cafe molido grueso.',
-      'Vierte agua y remueve.',
-      'Infusiona 4 minutos.',
-      'Presiona lentamente y sirve.',
-    ],
-    BrewMethod.coldbrew: [
-      'Agrega cafe molido grueso.',
-      'Incorpora agua fria.',
-      'Refrigera 12 a 16 horas.',
-      'Filtra y sirve con hielo o diluye.',
-    ],
-  };
+  static const _methodIconColor = Color(0xFF7D4D1F);
 
   @override
   void initState() {
@@ -95,7 +59,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           backgroundColor: const Color(0xFFF5EEE4),
           bottomNavigationBar: SafeArea(
             minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: _QuickSummary(
+            child: QuickSummary(
               coffee: coffee,
               water: waterValue,
               unit: controller.waterUnitLabel,
@@ -104,7 +68,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     'Tazas: ${controller.cups}\n'
                     'Cafe: $coffee g\n'
                     'Agua: $waterValue ${controller.waterUnitLabel}\n'
-                    'Ratio: ${controller.ratioLabel}';
+                    'Ratio: ${controller.ratioLabel}\n'
+                    'Molienda recomendada: ${controller.grindRecommendation}';
                 await Clipboard.setData(ClipboardData(text: recipe));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +91,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ),
           body: Stack(
             children: [
-              const _BackgroundOrbs(),
+              const BackgroundOrbs(),
               SafeArea(
                 child: SingleChildScrollView(
                   controller: _scrollController,
@@ -134,7 +99,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _GlassCard(
+                      GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -170,11 +135,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _GlassCard(
+                      GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _SectionTitle('Tipo de cafetera'),
+                            const SectionTitle('Tipo de cafetera'),
                             const SizedBox(height: 8),
                             GridView.count(
                               crossAxisCount: 3,
@@ -223,8 +188,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(_methodIcons[m],
-                                            color: const Color(0xFF7D4D1F)),
+                                        BrewMethodIcon(
+                                          method: m,
+                                          color: _methodIconColor,
+                                          size: 28,
+                                        ),
                                         const SizedBox(height: 6),
                                         Text(
                                           CoffeeCalculator.methodLabels[m]!,
@@ -244,11 +212,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _GlassCard(
+                      GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _SectionTitle('Numero de tazas'),
+                            const SectionTitle('Numero de tazas'),
                             Row(
                               children: [
                                 Expanded(
@@ -350,13 +318,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _GlassCard(
+                      GlassCard(
                         child: Column(
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const _SectionTitle('Modo avanzado'),
+                                const SectionTitle('Modo avanzado'),
                                 TextButton(
                                   onPressed: () => setState(
                                       () => _advancedOpen = !_advancedOpen),
@@ -405,22 +373,22 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _GlassCard(
+                      GlassCard(
                         key: _resultsKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _SectionTitle('Resultado'),
+                            const SectionTitle('Resultado'),
                             const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(
-                                  child: _MetricCard(
+                                  child: MetricCard(
                                       label: 'CAFE', value: coffee, unit: 'g'),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: _MetricCard(
+                                  child: MetricCard(
                                     label: 'AGUA',
                                     value: waterValue,
                                     unit: controller.waterUnitLabel,
@@ -441,6 +409,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                   color: Color(0xFF6B4D31),
                                   fontWeight: FontWeight.w600),
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Molienda recomendada: ${controller.grindRecommendation}',
+                              style: const TextStyle(
+                                  color: Color(0xFF6B4D31),
+                                  fontWeight: FontWeight.w600),
+                            ),
                             const SizedBox(height: 12),
                             const Text(
                               'Guia rapida',
@@ -451,7 +426,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            ..._guides[controller.method]!.asMap().entries.map(
+                            ...CoffeeCalculator.methodGuides[controller.method]!
+                                .asMap()
+                                .entries
+                                .map(
                                   (entry) => Padding(
                                     padding: const EdgeInsets.only(bottom: 7),
                                     child: Text(
@@ -500,231 +478,4 @@ InputDecoration _inputDecoration(String label) {
     filled: true,
     fillColor: const Color(0xCFFFFFF8),
   );
-}
-
-class _BackgroundOrbs extends StatelessWidget {
-  const _BackgroundOrbs();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: const [
-        Positioned(
-          right: -80,
-          top: -80,
-          child: _Orb(size: 260, color: Color(0x55F1B97A)),
-        ),
-        Positioned(
-          left: -70,
-          bottom: -100,
-          child: _Orb(size: 230, color: Color(0x3AD48D52)),
-        ),
-      ],
-    );
-  }
-}
-
-class _Orb extends StatelessWidget {
-  const _Orb({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
-    );
-  }
-}
-
-class _GlassCard extends StatelessWidget {
-  const _GlassCard({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.67)),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xCFFFFFFF), Color(0x8EFFF4E7)],
-            ),
-            boxShadow: const [
-              BoxShadow(
-                blurRadius: 22,
-                offset: Offset(0, 10),
-                color: Color(0x1C4D2D10),
-              )
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w800,
-        color: Color(0xFF3F2C1A),
-      ),
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard(
-      {required this.label, required this.value, required this.unit});
-
-  final String label;
-  final String value;
-  final String unit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
-        gradient: const LinearGradient(
-          colors: [Color(0xE8FFFFFF), Color(0xCCFFF2E1)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              letterSpacing: 1.1,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF7A593A),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 36,
-                  height: 0.92,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFFBD6A15),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  unit.toUpperCase(),
-                  style: const TextStyle(
-                    letterSpacing: 0.8,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF815B36),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickSummary extends StatelessWidget {
-  const _QuickSummary({
-    required this.coffee,
-    required this.water,
-    required this.unit,
-    required this.onCopy,
-    required this.onViewDetail,
-  });
-
-  final String coffee;
-  final String water;
-  final String unit;
-  final VoidCallback onCopy;
-  final VoidCallback onViewDetail;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
-            gradient: const LinearGradient(
-              colors: [Color(0xEEFFFFFF), Color(0xE6FFEEDA)],
-            ),
-            boxShadow: const [
-              BoxShadow(
-                blurRadius: 20,
-                offset: Offset(0, 8),
-                color: Color(0x265C3816),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Cafe $coffee g\nAgua $water ${unit.toUpperCase()}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    color: Color(0xFF4D361F),
-                    height: 1.35,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              FilledButton.tonal(
-                onPressed: onViewDetail,
-                child: const Text('Detalle'),
-              ),
-              const SizedBox(width: 6),
-              FilledButton(
-                onPressed: onCopy,
-                child: const Text('Copiar'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

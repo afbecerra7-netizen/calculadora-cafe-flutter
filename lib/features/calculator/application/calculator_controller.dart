@@ -171,6 +171,8 @@ class CalculatorController extends ChangeNotifier {
 
   String get ratioLabel => '1:${CoffeeCalculator.roundTo(adjustedRatio, 1)}';
   String get methodLabel => CoffeeCalculator.methodLabels[method]!;
+  String get grindRecommendation =>
+      CoffeeCalculator.grindRecommendations[method]!;
   String get rangeLabel {
     final range = CoffeeCalculator.suggestedRatioRange[method]!;
     return '1:${range.first} a 1:${range.last}';
